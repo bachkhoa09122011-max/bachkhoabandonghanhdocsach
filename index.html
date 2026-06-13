@@ -99,6 +99,7 @@
 </head>
 <body>
 <div class="app" id="appRoot">
+  <!-- Màn hình chào -->
   <div id="authScreen">
     <h2>📚 Bạn đồng hành đọc sách</h2>
     <p class="subtitle">Trợ lý AI tận tâm, chạy hoàn toàn trên máy của bạn qua Ollama</p>
@@ -108,6 +109,7 @@
     </div>
   </div>
 
+  <!-- Giao diện chính -->
   <div id="mainScreen" class="hidden">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem">
       <h1>📖 Bạn đồng hành đọc sách</h1>
@@ -117,12 +119,14 @@
       </div>
     </div>
 
+    <!-- Cấu hình API Server (linh hoạt IP) -->
     <div class="card" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
       <label style="white-space:nowrap; margin-bottom:0;">🌐 API Server:</label>
       <input type="text" id="apiBaseInput" placeholder="http://192.168.x.x:11434" style="flex:1; min-width:200px;" value="https://implicate-phantom-email.ngrok-free.dev">
       <button class="btn btn-outline" id="applyApiBtn">Áp dụng</button>
     </div>
 
+    <!-- Trạng thái kết nối và chọn model -->
     <div class="card" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
       <label style="white-space:nowrap; margin-bottom:0;">🤖 Model đang chạy:</label>
       <select id="modelSelect" style="flex:1; min-width:200px;"></select>
@@ -130,6 +134,7 @@
       <span id="connectionStatus" class="connection-status status-error">⏳ Đang kiểm tra...</span>
     </div>
 
+    <!-- Tải lên & phân tích -->
     <div class="card">
       <label>📤 Tải tác phẩm/Tài liệu của bạn lên (PDF, DOCX, TXT)</label>
       <p style="font-size:0.85rem; color:#7a624e; margin-bottom:1rem">AI sẽ tự động đọc, phân tích và phân loại chính xác.</p>
@@ -143,6 +148,7 @@
       <div id="analysisResult" style="margin-top:1.2rem; padding:1rem; border-radius:1rem; background:#f4eedf; display:none; border:1px solid #decbb2"></div>
     </div>
 
+    <!-- Thư viện sách với 3 tab -->
     <div class="card">
       <div class="tab-container">
         <div class="tab active" data-tab="discover">📚 Thư viện hệ thống</div>
@@ -180,6 +186,7 @@
       <div id="bookContainer" class="book-grid"></div>
     </div>
 
+    <!-- Chat với AI -->
     <div class="card">
       <label>💬 Trò chuyện học thuật cùng AI</label>
       <p style="font-size:0.85rem; color:#7a624e">Hỏi về sách, phân tích nhân vật, tóm tắt, dịch thuật...</p>
@@ -190,6 +197,7 @@
       </div>
     </div>
 
+    <!-- Thử thách 15 phút -->
     <div class="card">
       <label>⏱️ Thử thách 15 Phút Đọc Mỗi Ngày</label>
       <p style="font-size:0.85rem; color:#7a624e; margin-bottom:0.8rem">Bộ đếm tự động kích hoạt khi bạn mở sách.</p>
@@ -494,8 +502,15 @@ const sampleBooks = [
 ];
 
 // ==========================================================================
-// BIẾN TOÀN CỤC
+// BIẾN TOÀN CỤC & XỬ LÝ LỖI TRÌNH DUYỆT LƯU LINK CŨ (QUAN TRỌNG)
 // ==========================================================================
+
+// 1. TỰ ĐỘNG XÓA BỎ LINK CŨ TỪ CHIỀU NẾU NÓ LÀ LINK LOCA.LT HOẶC PINGGY ĐỂ TRÁNH LỖI CORS
+if (localStorage.getItem('ollama_api') && (localStorage.getItem('ollama_api').includes('loca.lt') || localStorage.getItem('ollama_api').includes('pinggy'))) {
+  localStorage.removeItem('ollama_api');
+}
+
+// 2. BIẾN TOÀN CỤC CHUẨN
 let currentUser = null;
 let readingTimer = null;
 let readingSeconds = 0;
@@ -506,7 +521,7 @@ let uploadedText = '';
 let currentTab = 'discover';
 let aiConnected = false;
 
-// Mặc định dùng link tunnel Ollama mới nhất
+// 3. Mặc định dùng link Ngrok mới nhất của bạn
 let OLLAMA_API = localStorage.getItem('ollama_api') || 'https://implicate-phantom-email.ngrok-free.dev';
 document.getElementById('apiBaseInput').value = OLLAMA_API;
 
@@ -538,7 +553,7 @@ function shareBookToCommunity(bookId) {
 }
 
 // ==========================================================================
-// OLLAMA API
+// OLLAMA API - ĐÃ CHÈN ĐẦY ĐỦ THẺ THÔNG HÀNH NGROK
 // ==========================================================================
 async function getOllamaModels() {
   const res = await fetch(`${OLLAMA_API}/api/tags`, {
