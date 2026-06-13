@@ -122,7 +122,7 @@
     <!-- Cấu hình API Server (linh hoạt IP) -->
     <div class="card" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
       <label style="white-space:nowrap; margin-bottom:0;">🌐 API Server:</label>
-      <input type="text" id="apiBaseInput" placeholder="http://192.168.x.x:11434" style="flex:1; min-width:200px;" value="https://five-seas-wonder.loca.lt">
+      <input type="text" id="apiBaseInput" placeholder="http://192.168.x.x:11434" style="flex:1; min-width:200px;" value="https://calm-facts-grab.loca.lt">
       <button class="btn btn-outline" id="applyApiBtn">Áp dụng</button>
     </div>
 
@@ -514,8 +514,8 @@ let uploadedText = '';
 let currentTab = 'discover';
 let aiConnected = false;
 
-// Mặc định dùng link tunnel Ollama (nếu cần, người dùng có thể đổi)
-let OLLAMA_API = localStorage.getItem('ollama_api') || 'https://five-seas-wonder.loca.lt';
+// Mặc định dùng link tunnel Ollama mới nhất
+let OLLAMA_API = localStorage.getItem('ollama_api') || 'https://calm-facts-grab.loca.lt';
 document.getElementById('apiBaseInput').value = OLLAMA_API;
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
