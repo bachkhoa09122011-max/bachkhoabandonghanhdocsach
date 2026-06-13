@@ -502,15 +502,8 @@ const sampleBooks = [
 ];
 
 // ==========================================================================
-// BIẾN TOÀN CỤC & XỬ LÝ LỖI TRÌNH DUYỆT LƯU LINK CŨ (QUAN TRỌNG)
+// BIẾN TOÀN CỤC
 // ==========================================================================
-
-// 1. TỰ ĐỘNG XÓA BỎ LINK CŨ TỪ CHIỀU NẾU NÓ LÀ LINK LOCA.LT HOẶC PINGGY ĐỂ TRÁNH LỖI CORS
-if (localStorage.getItem('ollama_api') && (localStorage.getItem('ollama_api').includes('loca.lt') || localStorage.getItem('ollama_api').includes('pinggy'))) {
-  localStorage.removeItem('ollama_api');
-}
-
-// 2. BIẾN TOÀN CỤC CHUẨN
 let currentUser = null;
 let readingTimer = null;
 let readingSeconds = 0;
@@ -521,7 +514,14 @@ let uploadedText = '';
 let currentTab = 'discover';
 let aiConnected = false;
 
-// 3. Mặc định dùng link Ngrok mới nhất của bạn
+// Xóa link localtunnel cũ nếu có và dùng link ngrok mặc định
+(function cleanupOldAPI() {
+  const saved = localStorage.getItem('ollama_api');
+  if (saved && saved.includes('loca.lt')) {
+    localStorage.removeItem('ollama_api');
+  }
+})();
+
 let OLLAMA_API = localStorage.getItem('ollama_api') || 'https://implicate-phantom-email.ngrok-free.dev';
 document.getElementById('apiBaseInput').value = OLLAMA_API;
 
@@ -553,15 +553,26 @@ function shareBookToCommunity(bookId) {
 }
 
 // ==========================================================================
-// OLLAMA API - ĐÃ CHÈN ĐẦY ĐỦ THẺ THÔNG HÀNH NGROK
+// OLLAMA API - TỰ ĐỘNG THÊM HEADER ĐỂ VƯỢT QUA CẢNH BÁO NGROK
 // ==========================================================================
-async function getOllamaModels() {
-  const res = await fetch(`${OLLAMA_API}/api/tags`, {
-    headers: {
-      "ngrok-skip-browser-warning": "true"
-    }
+async function ollamaFetch(path, options = {}) {
+  const headers = {
+    ...(options.headers || {}),
+    'ngrok-skip-browser-warning': 'true'
+  };
+  const res = await fetch(`${OLLAMA_API}${path}`, {
+    ...options,
+    headers
   });
-  const data = await res.json();
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Ollama error: ${err}`);
+  }
+  return res.json();
+}
+
+async function getOllamaModels() {
+  const data = await ollamaFetch('/api/tags');
   return data.models.map(m => m.name);
 }
 
@@ -613,12 +624,9 @@ async function callAI(prompt) {
     const recheck = await checkAIConnection();
     if (!recheck) throw new Error('Ollama chưa chạy. Hãy cài và chạy Ollama trước.');
   }
-  const res = await fetch(`${OLLAMA_API}/api/generate`, {
+  const data = await ollamaFetch('/api/generate', {
     method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'ngrok-skip-browser-warning': 'true'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: activeModel,
       prompt: prompt,
@@ -626,7 +634,6 @@ async function callAI(prompt) {
       options: { temperature: 0.2, num_predict: 2000 }
     })
   });
-  const data = await res.json();
   return data.response;
 }
 
